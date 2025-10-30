@@ -192,28 +192,6 @@ EmbeddedMusicVisualizer/
 
 ---
 
-## 📅 Development Progress
-
-| Week     | Summary                                                                                                 |
-| -------- | ------------------------------------------------------------------------------------------------------- |
-| Week 1   | Project setup, environment configuration, FFmpeg built successfully, basic visualization runs on Ubuntu |
-| Week 2   | Start implementing visualization core and UI logic                                                      |
-| Week 3–7 | Integrate LVGL interface, improve FFT performance, optimize graphics and final testing                  |
-
----
-
-## 📜 License
-
-This project is for educational purposes only.
-It includes the following open-source components:
-
-* **FFmpeg** – LGPL
-* **LVGL** – MIT
-* **KissFFT** – BSD-like
-
----
-
-✅ **Next step:**
 Copy this content into your project root as `README.md`, then run:
 
 ```bash
@@ -223,3 +201,4 @@ git push origin main
 ```
 
 ---
+
