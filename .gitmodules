@@ -1,0 +1,9 @@
+[submodule "Graphic/lvgl"]
+	path = Graphic/lvgl
+	url = https://github.com/lvgl/lvgl.git
+[submodule "Graphic/lv_drivers"]
+	path = Graphic/lv_drivers
+	url = https://github.com/lvgl/lv_drivers.git
+[submodule "MusicProcessor/kissfft"]
+	path = MusicProcessor/kissfft
+	url = https://github.com/mborgerding/kissfft.git
