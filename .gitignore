@@ -1,0 +1,9 @@
+**/*.local/
+**/*.remote/
+**/*.ignore/
+**/*.ignore
+**/.vscode/
+**/build/
+
+SharedLib/
+!SharedLib/FFmpeg/ffmpeg-4.4.4.tar.xz
