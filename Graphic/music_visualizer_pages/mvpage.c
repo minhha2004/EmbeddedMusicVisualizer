@@ -3,12 +3,24 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define MAX_SUBPAGES 10
-
 mv_page_t *MusicVisualizerPage = NULL;
 
+// Khai báo subpages khác
+extern mv_page_t WaveformPage;
+extern mv_page_t CircularPage;
+extern mv_page_t ArcReactorPage;
+extern mv_page_t ParticleFountainPage;
+extern mv_page_t PeakMeterPage;
+
+// Định nghĩa duy nhất list_subpages
 mv_page_t *list_subpages[MAX_SUBPAGES] = {
     (mv_page_t*)&BasicMusicVisualizerPage,
+    &CircularPage,
+    &WaveformPage,
+    &ArcReactorPage,
+    &ParticleFountainPage,
+    &PeakMeterPage,
+    NULL, NULL, NULL, NULL
 };
 
 mv_page_err_code SetSubpage(uint16_t index) {

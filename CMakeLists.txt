@@ -1,95 +1,120 @@
 cmake_minimum_required(VERSION 3.10)
-project(MusicVisualizer)
+project(MusicVisualizer C CXX)
 
-# Set standard C
 set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 17)
 
-# Path to FFmpeg and Kiss FFT
+# Path to FFmpeg build
 set(FFMPEG_ROOT "${CMAKE_SOURCE_DIR}/SharedLib/FFmpeg/ffmpeg-build")
 
-# Add include directories
+# Include directories (FFmpeg headers, LVGL headers, project headers)
 include_directories(
     ${FFMPEG_ROOT}/include
+    ${CMAKE_SOURCE_DIR}/Graphic
+    ${CMAKE_SOURCE_DIR}/Graphic/lvgl
+    ${CMAKE_SOURCE_DIR}/Graphic/lvgl/src
+    ${CMAKE_SOURCE_DIR}/Graphic/lv_drivers
+    ${CMAKE_SOURCE_DIR}/Graphic/lv_drivers/sdl
+    ${CMAKE_SOURCE_DIR}/Graphic/music_visualizer_pages
+    ${CMAKE_SOURCE_DIR}/MusicProcessor
 )
 
-include_directories(Graphic)
-include_directories(MusicProcessor)
+# Find SDL2
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
 
-# Add library directories  
-link_directories(
-    ${FFMPEG_ROOT}/lib
-)
+# Link directories for FFmpeg libs
+link_directories(${FFMPEG_ROOT}/lib)
 
-# Set direct path to static FFmpeg libraries
+# Find FFmpeg libraries (static/shared)
 find_library(AVFORMAT_LIB avformat PATHS ${FFMPEG_ROOT}/lib NO_DEFAULT_PATH)
 find_library(AVCODEC_LIB avcodec PATHS ${FFMPEG_ROOT}/lib NO_DEFAULT_PATH)
 find_library(AVUTIL_LIB avutil PATHS ${FFMPEG_ROOT}/lib NO_DEFAULT_PATH)
 find_library(AVDEVICE_LIB avdevice PATHS ${FFMPEG_ROOT}/lib NO_DEFAULT_PATH)
 find_library(SWRESAMPLE_LIB swresample PATHS ${FFMPEG_ROOT}/lib NO_DEFAULT_PATH)
+find_library(SWSCALE_LIB swscale PATHS ${FFMPEG_ROOT}/lib NO_DEFAULT_PATH)
 
-# Check if libraries exist
 if(NOT AVFORMAT_LIB)
     message(FATAL_ERROR "libavformat not found in ${FFMPEG_ROOT}/lib")
 endif()
-
 if(NOT AVCODEC_LIB)
     message(FATAL_ERROR "libavcodec not found in ${FFMPEG_ROOT}/lib")
 endif()
-
 if(NOT AVUTIL_LIB)
     message(FATAL_ERROR "libavutil not found in ${FFMPEG_ROOT}/lib")
 endif()
 
-if(NOT AVDEVICE_LIB)
-    message(FATAL_ERROR "libavdevice not found in ${FFMPEG_ROOT}/lib")
-endif()
+# Collect project sources
+file(GLOB_RECURSE GRAPHIC_SOURCES
+    "${CMAKE_SOURCE_DIR}/Graphic/*.c"
+    "${CMAKE_SOURCE_DIR}/Graphic/*.cpp"
+)
 
-# # Setup Kiss FFT library
-# add_library(kissfft STATIC
-#     ${KISSFFT_ROOT}/kiss_fft.c
-#     ${KISSFFT_ROOT}/kiss_fftr.c
-# )
-
-# target_include_directories(kissfft PUBLIC ${KISSFFT_ROOT})
-
-file(GLOB_RECURSE GRAPHIC_SOURCES Graphic/*.c)
+# Exclude remote lvgl (if any)
 list(FILTER GRAPHIC_SOURCES EXCLUDE REGEX ".*/lvgl\\.remote/.*")
 list(FILTER GRAPHIC_SOURCES EXCLUDE REGEX ".*/lv_drivers\\.remote/.*")
-file(GLOB_RECURSE MUSICPROCESSOR_SOURCES MusicProcessor/*.c)
 
-# Setup executable
-add_executable(musicvisualizer main.cpp ${GRAPHIC_SOURCES} ${MUSICPROCESSOR_SOURCES})
+# If you want to compile LVGL and lv_drivers sources into the binary, also gather them:
+file(GLOB_RECURSE LVGL_SOURCES "${CMAKE_SOURCE_DIR}/Graphic/lvgl/src/*.c")
+file(GLOB_RECURSE LV_DRIVERS_SOURCES "${CMAKE_SOURCE_DIR}/Graphic/lv_drivers/*/*.c")
 
-# Links to libraries
+# Music processor sources
+file(GLOB_RECURSE MUSICPROCESSOR_SOURCES "${CMAKE_SOURCE_DIR}/MusicProcessor/*.c")
+# If you have custom pages
+file(GLOB_RECURSE MV_PAGES_SOURCES "${CMAKE_SOURCE_DIR}/Graphic/music_visualizer_pages/*.c")
+
+# Build executable
+add_executable(musicvisualizer
+    main.cpp
+    Graphic/graphic.c
+    Graphic/main_page/mainpage.c
+    
+    # 3. Quản lý chuyển trang (Manager)
+    Graphic/music_visualizer_pages/mvpage.c
+
+    # 4. Các trang Visualizer (Logic hiển thị)
+    Graphic/music_visualizer_pages/circular.c
+    Graphic/music_visualizer_pages/basicmusicvisual.c 
+
+    # 5. Xử lý âm thanh (Audio Processor)
+    MusicProcessor/musicprocessor.c
+
+    # 6. --- QUAN TRỌNG: CÁC FILE ẢNH ĐÃ ĐƯỢC CONVERT ---
+    Graphic/music_visualizer_pages/circle_bg_png.c
+    Graphic/music_visualizer_pages/back_icon_png.c
+    Graphic/music_visualizer_pages/arcreactor.c
+    Graphic/music_visualizer_pages/particlefountain.c
+    Graphic/music_visualizer_pages/peakmeter.c
+    ${GRAPHIC_SOURCES}
+    ${LVGL_SOURCES}
+    ${LV_DRIVERS_SOURCES}
+    ${MUSICPROCESSOR_SOURCES}
+    ${MV_PAGES_SOURCES}
+)
+
+# Link libraries
 target_link_libraries(musicvisualizer
-    # kissfft
     ${AVFORMAT_LIB}
     ${AVCODEC_LIB}
     ${AVUTIL_LIB}
     ${AVDEVICE_LIB}
     ${SWRESAMPLE_LIB}
+    ${SWSCALE_LIB}
     pthread
     m
     z
-    SDL2 
-    SDL2main
+    ${SDL2_LIBRARIES}
 )
 
-# Set RPATH to find shared libraries
+# Set RPATH so runtime can find shared libs in ffmpeg-build/lib
 set_target_properties(musicvisualizer PROPERTIES
     INSTALL_RPATH "${FFMPEG_ROOT}/lib"
     BUILD_WITH_INSTALL_RPATH TRUE
 )
 
-# Compiler flags
+# Compiler warnings and optimization
 target_compile_options(musicvisualizer PRIVATE -Wall -Wextra -O2)
 
-# Print debug information
 message(STATUS "FFmpeg root: ${FFMPEG_ROOT}")
-message(STATUS "Kiss FFT root: ${KISSFFT_ROOT}")
-message(STATUS "AVFormat lib: ${AVFORMAT_LIB}")
-message(STATUS "AVCodec lib: ${AVCODEC_LIB}")
-message(STATUS "AVUtil lib: ${AVUTIL_LIB}")
-message(STATUS "AVDevice lib: ${AVDEVICE_LIB}")
+message(STATUS "Found SDL2: ${SDL2_LIBRARIES}")
+message(STATUS "GRAPHIC_SOURCES count: ${GRAPHIC_SOURCES}")

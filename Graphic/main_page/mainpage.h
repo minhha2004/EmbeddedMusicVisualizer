@@ -11,14 +11,12 @@ extern "C" {
 #define MAX_SUBPAGES 10
 
 typedef struct {
-    lv_obj_t *main_container;               // Main container object
-    lv_obj_t *subpage_list;                 // List widget to contain subpage containers
+    lv_obj_t *main_container;      
+    lv_obj_t *subpage_list;        
 } mainpage_t;
 
-/**
- * @brief Initialize main page with container list
- * @param parent Parent object to create main page in
- */
+extern mainpage_t g_mainpage;
+
 void mainpage_create(lv_obj_t *parent);
 
 #ifdef __cplusplus

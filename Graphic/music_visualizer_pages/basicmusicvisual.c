@@ -57,7 +57,6 @@ mv_page_err_code MusicVisualizerTest_sub_page_init(lv_obj_t *parent){
     lv_obj_set_style_border_opa(back_container, LV_OPA_TRANSP, 0);     
     lv_obj_set_style_outline_opa(back_container, LV_OPA_TRANSP, 0);
     lv_obj_clear_flag(back_container, LV_OBJ_FLAG_SCROLLABLE);
-
     lv_obj_set_style_pad_all(back_container, 0, 0);
     
     char image_path[256];

@@ -8,19 +8,18 @@
 extern "C" {
 #endif
 
-/* Define for Basic Music Visualizer */
 #define BAR_NUMBER 412
-/*************************************/
+#define MAX_SUBPAGES 10
 
 typedef enum
 {
-    MV_PAGE_RET_OK     = 0,
-    MV_PAGE_RET_FAIL,                    
+    MV_PAGE_RET_OK = 0,
+    MV_PAGE_RET_FAIL,
 } mv_page_err_code;
 
 typedef enum
 {
-    MV_PAGE_INIT     = 0,
+    MV_PAGE_INIT = 0,
     MV_PAGE_DEINIT,
     MV_PAGE_IDLE
 } mv_page_state_t;
@@ -43,11 +42,11 @@ typedef struct mv_page_t{
 } mv_page_t;
 
 extern mv_page_t *MusicVisualizerPage;
+extern mv_page_t *list_subpages[MAX_SUBPAGES];  // <--- chỉ khai báo ở đây
 
 mv_page_err_code SetSubpage(uint16_t index);
 
 /* Setup for Basic Music Visualizer */
-
 typedef struct basic_musicvisual_mv_page_t{
     mv_page_t base;
     lv_obj_t *music_bar[BAR_NUMBER];
@@ -55,10 +54,8 @@ typedef struct basic_musicvisual_mv_page_t{
 
 extern basic_musicvisual_mv_page_t BasicMusicVisualizerPage;
 
-/************************************/
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif // SUBPAGE_H
+#endif // MUSIC_VISUALIZER_PAGE_H
