@@ -1,6 +1,6 @@
 // ==========================================
 // FILE: peakmeter.c
-// STYLE: Mirrored Peak Meter (Có hạt rơi trọng lực)
+// STYLE: LED Segment Mirror (Khối LED kỹ thuật số)
 // ==========================================
 #include "../music_visualizer_pages/mvpage.h" 
 #include "peakmeter.h"
@@ -14,9 +14,11 @@ extern mv_page_t PeakMeterPage;
 LV_IMG_DECLARE(back_icon_png);
 
 // --- CẤU HÌNH ---
-#define BAR_COUNT 64       // Số lượng cột (Ít hơn Waveform để cột to và rõ)
-#define PEAK_GRAVITY 1.5f  // Tốc độ rơi của hạt đỉnh
-#define PEAK_HOLD_TIME 10  // Thời gian giữ đỉnh (số khung hình) trước khi rơi
+#define BAR_COUNT 48       // Giảm số cột để LED to và rõ hơn
+#define SEGMENT_HEIGHT 6   // Chiều cao mỗi viên LED
+#define SEGMENT_GAP 2      // Khe hở giữa các viên LED
+#define PEAK_GRAVITY 2.0f  
+#define PEAK_HOLD_TIME 15  
 
 static int canvas_w = GRAPHIC_HOR_RES;
 static int canvas_h = GRAPHIC_VER_RES; 
@@ -26,14 +28,10 @@ static lv_obj_t *canvas = NULL;
 static lv_obj_t *back_btn = NULL;
 static lv_color_t *cbuf = NULL;
 
-// Mảng lưu chiều cao hiện tại (để làm mượt)
 static float bar_heights[BAR_COUNT];
-// Mảng lưu vị trí của hạt đỉnh (Peak)
 static float peak_levels[BAR_COUNT];
-// Mảng đếm ngược thời gian giữ đỉnh
 static int peak_hold_timers[BAR_COUNT];
 
-// --- HÀM BACK ---
 static void back_event_handler(lv_event_t *e) {
     (void)e;
     extern mv_page_t *MusicVisualizerPage; 
@@ -44,14 +42,13 @@ static void back_event_handler(lv_event_t *e) {
     mainpage_create(lv_scr_act());
 }
 
-// --- INIT ---
 mv_page_err_code PeakMeter_sub_page_init(lv_obj_t *parent) {
     if (!parent) return MV_PAGE_RET_FAIL;
     PeakMeterPage.state = MV_PAGE_INIT;
 
     peak_cont = lv_obj_create(parent);
     lv_obj_set_size(peak_cont, LV_PCT(100), LV_PCT(100));
-    lv_obj_set_style_bg_color(peak_cont, lv_color_hex(0x050505), 0); // Đen sẫm
+    lv_obj_set_style_bg_color(peak_cont, lv_color_hex(0x000000), 0); // Đen tuyền
     lv_obj_clear_flag(peak_cont, LV_OBJ_FLAG_SCROLLABLE);
 
     canvas = lv_canvas_create(peak_cont);
@@ -62,9 +59,8 @@ mv_page_err_code PeakMeter_sub_page_init(lv_obj_t *parent) {
     if (!cbuf) return MV_PAGE_RET_FAIL;
     
     lv_canvas_set_buffer(canvas, cbuf, canvas_w, canvas_h, LV_IMG_CF_TRUE_COLOR);
-    lv_canvas_fill_bg(canvas, lv_color_hex(0x050505), LV_OPA_COVER);
+    lv_canvas_fill_bg(canvas, lv_color_hex(0x000000), LV_OPA_COVER);
 
-    // Reset dữ liệu
     for(int i=0; i<BAR_COUNT; i++) {
         bar_heights[i] = 0.0f;
         peak_levels[i] = 0.0f;
@@ -91,88 +87,95 @@ mv_page_err_code PeakMeter_sub_page_deinit(void) {
     return MV_PAGE_RET_OK;
 }
 
-// --- UPDATE ---
+// --- UPDATE (LED STYLE) ---
 mv_page_err_code PeakMeter_sub_page_main_function(mv_value_t *value) {
     if (!canvas || !value || !value->value) return MV_PAGE_RET_FAIL;
 
-    // Xóa nền
-    lv_canvas_fill_bg(canvas, lv_color_hex(0x050505), LV_OPA_COVER);
+    lv_canvas_fill_bg(canvas, lv_color_hex(0x000000), LV_OPA_COVER);
 
-    lv_draw_rect_dsc_t bar_dsc;
-    lv_draw_rect_dsc_init(&bar_dsc);
+    lv_draw_rect_dsc_t led_dsc;
+    lv_draw_rect_dsc_init(&led_dsc);
     
-    // Config cho hạt Peak (Màu trắng sáng)
     lv_draw_rect_dsc_t peak_dsc;
     lv_draw_rect_dsc_init(&peak_dsc);
-    peak_dsc.bg_color = lv_color_hex(0xFFFFFF); 
+    peak_dsc.bg_color = lv_color_hex(0xFFFFFF); // Peak màu trắng
 
     int center_y = canvas_h / 2;
     float bar_width_float = (float)canvas_w / (float)BAR_COUNT;
-    int bar_w = (int)bar_width_float - 4; // Trừ 4px để tạo khe hở giữa các cột
-    if (bar_w < 1) bar_w = 1;
+    int bar_w = (int)bar_width_float - 6; // Khe hở ngang rộng hơn (6px)
+    if (bar_w < 2) bar_w = 2;
 
-    int max_h = (canvas_h / 2) - 10; // Chiều cao tối đa
+    int max_h = (canvas_h / 2) - 20;
 
     for (int i = 0; i < BAR_COUNT; i++) {
-        // Lấy dữ liệu
         int input_idx = i * (BAR_NUMBER / BAR_COUNT); 
         float raw_val = value->value[input_idx];
         if (raw_val < 0) raw_val = -raw_val;
 
-        // 1. LÀM MƯỢT CỘT SÓNG
-        // Lên nhanh (0.4), xuống chậm (0.8)
+        // Smoothing (Nhanh hơn chút cho LED nảy)
         if (raw_val > bar_heights[i]) {
-            bar_heights[i] = bar_heights[i] * 0.6f + raw_val * 0.4f;
+            bar_heights[i] = bar_heights[i] * 0.5f + raw_val * 0.5f;
         } else {
-            bar_heights[i] = bar_heights[i] * 0.85f + raw_val * 0.15f;
+            bar_heights[i] = bar_heights[i] * 0.8f + raw_val * 0.2f;
         }
 
-        // 2. TÍNH CHIỀU CAO HIỂN THỊ
-        // Tín hiệu to (60-80) -> nhân 0.04 là đẹp
+        // Tính chiều cao (Sensitivity cho tín hiệu to)
         int h = (int)(bar_heights[i] * 0.04f * (float)max_h);
         if (h > max_h) h = max_h;
         if (h < 0) h = 0;
 
-        // 3. XỬ LÝ VẬT LÝ CHO HẠT PEAK (Trọng tâm của style này)
+        // Logic Peak Hold
         if (h >= peak_levels[i]) {
-            // Nếu cột sóng cao hơn hạt -> Đẩy hạt lên ngay lập tức
             peak_levels[i] = (float)h;
-            peak_hold_timers[i] = PEAK_HOLD_TIME; // Reset thời gian giữ
+            peak_hold_timers[i] = PEAK_HOLD_TIME;
         } else {
-            // Nếu cột sóng thấp hơn hạt
-            if (peak_hold_timers[i] > 0) {
-                // Đang trong thời gian giữ đỉnh -> Hạt đứng yên trên không trung
-                peak_hold_timers[i]--;
-            } else {
-                // Hết thời gian giữ -> Hạt bắt đầu rơi tự do
+            if (peak_hold_timers[i] > 0) peak_hold_timers[i]--;
+            else {
                 peak_levels[i] -= PEAK_GRAVITY;
-                // Nếu rơi xuống thấp hơn cột sóng thì dừng lại ở đầu cột sóng
                 if (peak_levels[i] < h) peak_levels[i] = (float)h;
             }
         }
 
-        // 4. VẼ
-        int x = (int)(i * bar_width_float) + 2;
-        
-        // -- Màu Gradient theo chiều ngang (Cyan -> Purple -> Red) --
-        int hue = 160 - (i * 160 / BAR_COUNT); // 160 (Xanh) về 0 (Đỏ)
-        if (hue < 0) hue += 360;
-        bar_dsc.bg_color = lv_color_hsv_to_rgb(hue, 90, 100);
+        int x = (int)(i * bar_width_float) + 3;
 
-        // -- Vẽ Cột Trên --
-        lv_canvas_draw_rect(canvas, x, center_y - h, bar_w, h, &bar_dsc);
-        // -- Vẽ Cột Dưới --
-        lv_canvas_draw_rect(canvas, x, center_y, bar_w, h, &bar_dsc);
+        // --- VẼ CÁC VIÊN LED (SEGMENTS) ---
+        // Thay vì vẽ 1 thanh dài, ta vẽ vòng lặp các viên nhỏ
+        for (int y = 0; y < h; y += (SEGMENT_HEIGHT + SEGMENT_GAP)) {
+            
+            // Tính toán màu sắc dựa trên độ cao (Zone Color)
+            // Dưới thấp: Xanh (Hue 120) -> Giữa: Vàng (Hue 60) -> Cao: Đỏ (Hue 0)
+            float percent = (float)y / (float)max_h; // 0.0 -> 1.0
+            
+            // Xanh (120) -> Đỏ (0)
+            int hue = (int)(120.0f * (1.0f - percent)); 
+            if (hue < 0) hue = 0;
+            
+            led_dsc.bg_color = lv_color_hsv_to_rgb(hue, 100, 100);
 
-        // -- Vẽ Hạt Peak --
-        int peak_y_top = center_y - (int)peak_levels[i] - 2; // Cách đỉnh 2px
-        int peak_y_bot = center_y + (int)peak_levels[i];
-        
-        if (peak_levels[i] > 2) { // Chỉ vẽ nếu có độ cao
-            // Hạt trên
-            lv_canvas_draw_rect(canvas, x, peak_y_top, bar_w, 2, &peak_dsc);
-            // Hạt dưới
-            lv_canvas_draw_rect(canvas, x, peak_y_bot, bar_w, 2, &peak_dsc);
+            // Vẽ viên LED trên
+            lv_canvas_draw_rect(canvas, x, center_y - y - SEGMENT_HEIGHT, bar_w, SEGMENT_HEIGHT, &led_dsc);
+            
+            // Vẽ viên LED dưới (Đối xứng)
+            // Giảm độ sáng cho phần phản chiếu dưới nước (cho nghệ)
+            lv_color_t mirror_col = lv_color_hsv_to_rgb(hue, 100, 70); // Val 70%
+            led_dsc.bg_color = mirror_col;
+            lv_canvas_draw_rect(canvas, x, center_y + y, bar_w, SEGMENT_HEIGHT, &led_dsc);
+        }
+
+        // --- VẼ PEAK (VẠCH ĐỈNH) ---
+        // Vẽ Peak dưới dạng một viên LED mỏng màu trắng
+        if (peak_levels[i] > 0) {
+            int peak_y = (int)peak_levels[i];
+            
+            // Snap to grid: Làm tròn vị trí Peak vào đúng ô lưới LED
+            // Để Peak không bị lơ lửng giữa các khe hở
+            int step = SEGMENT_HEIGHT + SEGMENT_GAP;
+            peak_y = (peak_y / step) * step; 
+
+            // Peak Trên
+            lv_canvas_draw_rect(canvas, x, center_y - peak_y - 2, bar_w, 2, &peak_dsc);
+            // Peak Dưới
+            lv_canvas_draw_rect(canvas, x, center_y + peak_y, bar_w, 2, &peak_dsc);
         }
     }
 

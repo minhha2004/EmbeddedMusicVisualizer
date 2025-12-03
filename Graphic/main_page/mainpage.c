@@ -113,6 +113,13 @@ void mainpage_create(lv_obj_t *parent)
         "Gravity peaks mirror.",
         "basic_visual_image.png" 
     );
+
+    // ID 6: Pink Diamond 3D
+    mainpage_add_card(
+        "Pink Diamonds",
+        "Floating jewels reacting to bass.",
+        "basic_visual_image.png" 
+    );
 }
 
 /********************************************

@@ -11,6 +11,7 @@ extern mv_page_t CircularPage;
 extern mv_page_t ArcReactorPage;
 extern mv_page_t ParticleFountainPage;
 extern mv_page_t PeakMeterPage;
+extern mv_page_t PinkDiamondPage;
 
 // Định nghĩa duy nhất list_subpages
 mv_page_t *list_subpages[MAX_SUBPAGES] = {
@@ -20,7 +21,8 @@ mv_page_t *list_subpages[MAX_SUBPAGES] = {
     &ArcReactorPage,
     &ParticleFountainPage,
     &PeakMeterPage,
-    NULL, NULL, NULL, NULL
+    &PinkDiamondPage,
+    NULL, NULL, NULL
 };
 
 mv_page_err_code SetSubpage(uint16_t index) {
