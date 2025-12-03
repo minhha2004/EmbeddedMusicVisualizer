@@ -85,6 +85,8 @@ add_executable(musicvisualizer
     Graphic/music_visualizer_pages/arcreactor.c
     Graphic/music_visualizer_pages/particlefountain.c
     Graphic/music_visualizer_pages/peakmeter.c
+    Graphic/music_visualizer_pages/pinkdiamond.c
+    Graphic/music_visualizer_pages/pink_diamond_png.c
     ${GRAPHIC_SOURCES}
     ${LVGL_SOURCES}
     ${LV_DRIVERS_SOURCES}
