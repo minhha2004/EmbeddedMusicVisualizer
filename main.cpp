@@ -11,6 +11,7 @@
 #include <time.h>
 #include <string.h>
 
+
 pthread_mutex_t lvgl_mutex;
 mv_value_t value;
 
@@ -39,10 +40,12 @@ int main(void)
 {  
     /* Initialize graphics with default configuration */
     graphic_result_t result = graphic_init();
+
     if (result != GRAPHIC_OK) {
         printf("Error: Failed to initialize graphics: %d\n", result);
         return -1;
     }
+
     
     /* Create test UI */
     mainpage_create(lv_scr_act());
