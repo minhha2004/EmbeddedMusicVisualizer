@@ -1,0 +1,3 @@
+/home/dell/EmbeddedMusicVisualizer/build-sc/CMakeFiles/musicviz_sc_sim.dir
+/home/dell/EmbeddedMusicVisualizer/build-sc/CMakeFiles/edit_cache.dir
+/home/dell/EmbeddedMusicVisualizer/build-sc/CMakeFiles/rebuild_cache.dir

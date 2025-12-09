@@ -16,7 +16,7 @@ mainpage_t g_mainpage;
 static uint32_t item_id_counter = 0;
 
 // Đường dẫn ảnh
-static const char* MENU_IMG_PATH = "/home/asus/EmbeddedMusicVisualizer(Visual)/Graphic/images_src/";
+static const char* MENU_IMG_PATH = "/home/dell/EmbeddedMusicVisualizer/Graphic/images_src/";
 
 /********* STATIC PROTOTYPES *********/
 static void container_click_event_cb(lv_event_t *e);

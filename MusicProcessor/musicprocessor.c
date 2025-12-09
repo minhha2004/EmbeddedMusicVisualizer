@@ -278,11 +278,21 @@ static void process_fft(void) {
 static void convert_samples_to_float(AVPacket* packet, float* output, int* num_samples) {
     int16_t* input_samples = (int16_t*)packet->data;
     *num_samples = packet->size / sizeof(int16_t);
-    
+
+    if (*num_samples > MP_BUFFER_SIZE) *num_samples = MP_BUFFER_SIZE;
+
+    const float GAIN = 4.0f; // test 2.0 -> 4.0 -> 6.0
     for (int i = 0; i < *num_samples; i++) {
-        output[i] = input_samples[i] / 32768.0f;
+        float x = (float)input_samples[i] / 32768.0f;
+        x *= GAIN;
+
+        if (x > 1.0f) x = 1.0f;
+        if (x < -1.0f) x = -1.0f;
+
+        output[i] = x;
     }
 }
+
 
 static void display_spectrum() {
     printf("\r");
