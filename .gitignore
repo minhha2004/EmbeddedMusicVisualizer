@@ -35,3 +35,7 @@ SharedLib_Pi/**
 !SharedLib_Pi/pi-sysroot/**
 !SharedLib_Pi/deploy/
 !SharedLib_Pi/deploy/**
+
+# ignore heavy ffmpeg folders
+SharedLib_Pi/FFmpeg/ffmpeg-4.4.4/
+SharedLib_Pi/FFmpeg/ffmpeg-build/
