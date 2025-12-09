@@ -1,26 +1,37 @@
-**/*.local/
-**/*.remote/
-**/*.ignore/
-**/*.ignore
-**/.vscode/
-**/build/
+# editor
+.vscode/
 
-# ---- SharedLib: ignore all, but allow only the FFmpeg tarball ----
+# build artifacts (KHÔNG push)
+build/
+**/build/
+build-sc/
+**/build-sc/
+cmake-build-*/
+
+# cmake noise if generated outside build dirs
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# optional local noise
+*.log
+.DS_Store
+
+# ---- Ignore everything in SharedLib except the tarball you want ----
 SharedLib/**
 !SharedLib/
 !SharedLib/FFmpeg/
 !SharedLib/FFmpeg/ffmpeg-4.4.4.tar.xz
 
-# (khuyên) không push thư mục giải nén + build output
-SharedLib/FFmpeg/ffmpeg-4.4.4/
-SharedLib/FFmpeg/ffmpeg-build/
-
-# ---- SharedLib_Pi: ignore all, but allow selected files ----
+# ---- SharedLib_Pi: ignore everything EXCEPT these folders/files ----
 SharedLib_Pi/**
 !SharedLib_Pi/
 !SharedLib_Pi/CrossCompiler/
-!SharedLib_Pi/CrossCompiler/README.md
+!SharedLib_Pi/CrossCompiler/**
 !SharedLib_Pi/FFmpeg/
-!SharedLib_Pi/FFmpeg/ffmpeg-4.4.4.tar.xz
+!SharedLib_Pi/FFmpeg/**
 !SharedLib_Pi/pi-sysroot/
-!SharedLib_Pi/pi-sysroot/README.md
+!SharedLib_Pi/pi-sysroot/**
+!SharedLib_Pi/deploy/
+!SharedLib_Pi/deploy/**
