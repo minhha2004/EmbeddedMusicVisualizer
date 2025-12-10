@@ -35,7 +35,6 @@ typedef struct {
     const char* device_name;
 } mp_config_t;
 
-
 // Public API functions
 
 /**
@@ -53,8 +52,6 @@ mp_result_t mp_init_with_config(const mp_config_t* config);
 
 /**
  * Start real-time audio processing
- * @param callback Function to call with FFT data (can be NULL)
- * @param user_data User data to pass to callback
  * @return MP_SUCCESS on success, error code on failure
  */
 mp_result_t mp_start_recording(void);
@@ -75,6 +72,20 @@ void processing_function(void);
  * @return Pointer to array of magnitude values (size: fft_size/2 + 1)
  */
 float* get_magnitude_data(void);
+
+/**
+ * Convert current FFT magnitude into 32 bands normalized (0..1).
+ * Output:
+ *  - out32[i] in [0..1]
+ * Use this for LED matrix 8x32 (32 columns).
+ */
+void mp_get_bands32(float out32[32]);
+
+/**
+ * Generic bands helper (optional): map magnitude -> N bands normalized (0..1).
+ * bands_count should be <= 64 (recommended). Returns 0 on success.
+ */
+int mp_get_bands(float* out, int bands_count);
 
 /**
  * Cleanup and free all resources

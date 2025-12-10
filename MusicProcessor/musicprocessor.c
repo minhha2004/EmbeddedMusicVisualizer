@@ -327,3 +327,58 @@ static void display_spectrum() {
 float* get_magnitude_data(void) {
     return g_processor.magnitude;
 }
+
+void mp_get_bands32(float out32[32]) {
+    if (!out32) return;
+
+    const int N = g_processor.config.fft_size/2 + 1;
+    float* mag = g_processor.magnitude;
+    if (!mag) { memset(out32, 0, 32*sizeof(float)); return; }
+
+    // Static smoothing state (EMA)
+    static int inited = 0;
+    static float smooth[32];
+    if (!inited) { memset(smooth, 0, sizeof(smooth)); inited = 1; }
+
+    // Chọn dải tần để nhìn đẹp: bỏ DC, chỉ lấy đến ~1/3 phổ (tùy bạn)
+    const int start_bin = 2;
+    int end_bin = (int)(N * 0.33f);
+    if (end_bin < start_bin + 32) end_bin = start_bin + 32;
+    if (end_bin > N-1) end_bin = N-1;
+
+    // Gom bin theo kiểu "gần log": band i lấy [b0..b1] tăng dần
+    float raw[32];
+    for (int i = 0; i < 32; i++) raw[i] = 0.0f;
+
+    float span = (float)(end_bin - start_bin);
+    for (int i = 0; i < 32; i++) {
+        // mapping cong để bass nhiều detail hơn: t^2
+        float t0 = (float)i / 32.0f;
+        float t1 = (float)(i + 1) / 32.0f;
+        t0 = t0 * t0;
+        t1 = t1 * t1;
+
+        int b0 = start_bin + (int)(t0 * span);
+        int b1 = start_bin + (int)(t1 * span);
+        if (b1 <= b0) b1 = b0 + 1;
+        if (b1 > end_bin) b1 = end_bin;
+
+        float sum = 0.0f;
+        for (int b = b0; b < b1; b++) sum += mag[b];
+        raw[i] = sum / (float)(b1 - b0);
+    }
+
+    // Normalize theo max (tránh chia 0)
+    float mx = 1e-9f;
+    for (int i = 0; i < 32; i++) if (raw[i] > mx) mx = raw[i];
+
+    // EMA smoothing + compress (sqrt) để nhìn đều hơn
+    const float a = 0.80f; // smoothing factor
+    for (int i = 0; i < 32; i++) {
+        float v = raw[i] / mx;          // 0..1
+        v = sqrtf(v);                   // nén động nhẹ
+        smooth[i] = a * smooth[i] + (1.0f - a) * v;
+        out32[i] = smooth[i];
+    }
+}
+
