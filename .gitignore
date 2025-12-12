@@ -1,41 +1,29 @@
 # editor
 .vscode/
 
-# build artifacts (KHÔNG push)
+# build artifacts
 build/
 **/build/
 build-sc/
 **/build-sc/
 cmake-build-*/
-
-# cmake noise if generated outside build dirs
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 Makefile
-
-# optional local noise
 *.log
 .DS_Store
 
-# ---- Ignore everything in SharedLib except the tarball you want ----
+# SharedLib: chỉ giữ tarball ffmpeg (nếu bạn muốn)
 SharedLib/**
 !SharedLib/
 !SharedLib/FFmpeg/
 !SharedLib/FFmpeg/ffmpeg-4.4.4.tar.xz
 
-# ---- SharedLib_Pi: ignore everything EXCEPT these folders/files ----
+# SharedLib_Pi: KHÔNG push sysroot/toolchain
+SharedLib_Pi/
 SharedLib_Pi/**
-!SharedLib_Pi/
-!SharedLib_Pi/CrossCompiler/
-!SharedLib_Pi/CrossCompiler/**
-!SharedLib_Pi/FFmpeg/
-!SharedLib_Pi/FFmpeg/**
-!SharedLib_Pi/pi-sysroot/
-!SharedLib_Pi/pi-sysroot/**
+
+# nếu bạn muốn giữ deploy scripts nhỏ:
 !SharedLib_Pi/deploy/
 !SharedLib_Pi/deploy/**
-
-# ignore heavy ffmpeg folders
-SharedLib_Pi/FFmpeg/ffmpeg-4.4.4/
-SharedLib_Pi/FFmpeg/ffmpeg-build/
